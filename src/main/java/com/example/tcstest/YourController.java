@@ -167,8 +167,9 @@ public class YourController {
             logoCell.setPaddingBottom(20); // Set your bottom padding
             headerTable.addCell(logoCell); // Add the logo cell to the header table
 
+
             // Company Info cell with padding and no border
-            Paragraph companyInfo = new Paragraph("REDACTED")
+            Paragraph companyInfo = new Paragraph("The Courier Shoppe\n1275 Walker Road\nWindsor, ON\n N8Y 4X9\n(226) 975-0100\nadmin@thecouriershoppe.com")
                     .setMultipliedLeading(1.0f);
             Cell companyInfoCell = new Cell().add(companyInfo).setBorder(Border.NO_BORDER);
             companyInfoCell.setPaddingRight(20); // Set your right padding
