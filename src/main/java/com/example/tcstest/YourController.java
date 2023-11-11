@@ -185,6 +185,16 @@ public class YourController {
             // Calculate the width for the tables within the margins
             float widthMinusMargins = pdfDocument.getDefaultPageSize().getWidth() - (document.getLeftMargin() + document.getRightMargin());
 
+            float pageSizeWidth = pdfDocument.getDefaultPageSize().getWidth();
+            float leftMargin = document.getLeftMargin();
+            float rightMargin = document.getRightMargin();
+
+            System.out.println("Page size width: " + pageSizeWidth); // Debug output
+            System.out.println("Left margin: " + leftMargin); // Debug output
+            System.out.println("Right margin: " + rightMargin); // Debug output
+            System.out.println("Width minus margins: " + widthMinusMargins); // Debug output
+
+
             // Add customer info below company info
             Paragraph customerInfo = new Paragraph()
                     .add("Bill To:\n")
