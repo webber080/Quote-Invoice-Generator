@@ -130,7 +130,7 @@ public class YourController {
         double totalWithTax = subtotal + tax;
     }
 
-    public void exportToPDF() {
+    public void exportToPDFOld() {
         try {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Save PDF");
@@ -264,6 +264,106 @@ public class YourController {
             e.printStackTrace();
         }
     }
+
+    public void exportToPDF() {
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save PDF");
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+            File selectedFile = fileChooser.showSaveDialog(itemTable.getScene().getWindow());
+
+            if (selectedFile == null) {
+                return; // User canceled the file chooser
+            }
+
+            PdfWriter writer = new PdfWriter(selectedFile.getAbsolutePath());
+            PdfDocument pdfDocument = new PdfDocument(writer);
+            Document document = new Document(pdfDocument, new PageSize(PageSize.A4)); // Set the document size and orientation
+
+            // Set the margins for the document
+            document.setMargins(50, 50, 50, 50);
+
+            // Load the company logo
+            ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
+            Image pdfImg = new Image(imageData).setAutoScale(true);
+
+            // Create a table for the header with no border and padding
+            Table headerTable = new Table(new float[]{1, 2});
+            headerTable.setWidth(UnitValue.createPercentValue(100)); // Use 100% of page width
+            headerTable.setBackgroundColor(new DeviceRgb(255, 199, 51)); // Set the background color for the header
+
+            // Add the logo to the header table
+            headerTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPadding(20));
+
+            // Add the company info to the header table
+            Paragraph companyInfo = new Paragraph("The Courier Shoppe\n1275 Walker Road\nWindsor, ON\n N8Y 4X9\n(226) 975-0100\nadmin@thecouriershoppe.com")
+                    .setMultipliedLeading(1.0f);
+            headerTable.addCell(new Cell().add(companyInfo).setBorder(Border.NO_BORDER).setPadding(20));
+
+            // Add the header table to the document
+            document.add(headerTable);
+
+            // Add the Bill To: section
+            Paragraph billTo = new Paragraph("Bill To:\n")
+                    .add(companyField.getText() + "\n")
+                    .add(streetField.getText() + "\n")
+                    .add(cityField.getText() + "\n")
+                    .add(postalField.getText() + "\n")
+                    .add(phoneField.getText() + "\n")
+                    .add(emailField.getText() + "\n")
+                    .setBold();
+            document.add(billTo);
+
+            // Create the item details table with specific column widths
+            Table itemDetailsTable = new Table(new float[]{5, 1, 1, 1});
+            itemDetailsTable.setWidth(UnitValue.createPercentValue(100)); // Use 100% of page width
+
+            // Add headers to the table
+            Stream.of("Item", "Quantity", "Price", "Total Price").forEach(headerTitle -> {
+                itemDetailsTable.addHeaderCell(new Cell().add(new Paragraph(headerTitle)).setBackgroundColor(ColorConstants.LIGHT_GRAY));
+            });
+
+            // Add item rows to the table
+            for (Item item : itemTable.getItems()) {
+                itemDetailsTable.addCell(new Paragraph(item.getName()));
+                itemDetailsTable.addCell(new Paragraph(String.valueOf(item.getQuantity())));
+                itemDetailsTable.addCell(new Paragraph(String.format("$%.2f", item.getUnitPrice())));
+                itemDetailsTable.addCell(new Paragraph(String.format("$%.2f", item.getLineTotal())));
+            }
+
+            // Add the item details table to the document
+            document.add(itemDetailsTable);
+
+            // Add subtotal, tax, and total
+            double subtotal = itemTable.getItems().stream().mapToDouble(Item::getLineTotal).sum();
+            double tax = subtotal * 0.13;
+            double total = subtotal + tax;
+
+            Table totalTable = new Table(new float[]{2, 1});
+            totalTable.setWidth(UnitValue.createPercentValue(100)); // Use 100% of page width
+            totalTable.addCell(new Cell().add(new Paragraph("Subtotal")));
+            totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", subtotal))));
+            totalTable.addCell(new Cell().add(new Paragraph("Tax (13%)")));
+            totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", tax))));
+            totalTable.addCell(new Cell().add(new Paragraph("Total")));
+            totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", total))));
+
+            // Add the total table to the document
+            document.add(totalTable);
+
+            // Add footer
+            Paragraph footer = new Paragraph("Thank you for your business!")
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(footer);
+
+            // Close the document
+            document.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 
