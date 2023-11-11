@@ -179,12 +179,11 @@ public class YourController {
 
             document.add(headerTable); // Add the header table to the document
 
-            // Set the margins for the new area where the rest of the content will be placed
+            // Set the margins for the rest of the content
             document.setMargins(50, 50, 50, 50);
 
-            // Calculate the available width for the content within the margins
-            float pageWidth = pdfDocument.getDefaultPageSize().getWidth();
-            float widthMinusMargins = pageWidth - (document.getLeftMargin() + document.getRightMargin());
+            // Calculate the width for the tables within the margins
+            float widthMinusMargins = pdfDocument.getDefaultPageSize().getWidth() - (document.getLeftMargin() + document.getRightMargin());
 
             // Add customer info below company info
             Paragraph customerInfo = new Paragraph()
@@ -199,10 +198,13 @@ public class YourController {
                     .setMarginTop(10); // Space above customer info
             document.add(customerInfo);
 
+
+
             // Generate table with item details
             float[] newColumnWidths = {5, 1, 1, 1}; // Adjust column widths as necessary
             Table itemDetailsTable = new Table(UnitValue.createPercentArray(newColumnWidths));
-            itemDetailsTable.setWidth(UnitValue.createPercentValue(widthMinusMargins));
+
+            itemDetailsTable.setWidth(widthMinusMargins);
 
             // Add headers
             Stream.of("Item", "Quantity", "Price", "Total Price").forEach(headerTitle -> {
@@ -229,7 +231,7 @@ public class YourController {
 
             // Add subtotal, tax, and total rows to the document
             Table totalTable = new Table(UnitValue.createPercentArray(new float[]{2, 1}));
-            totalTable.setWidth(UnitValue.createPercentValue(widthMinusMargins)).setMarginTop(10);
+            totalTable.setWidth(widthMinusMargins);
             totalTable.addCell(new Cell().add(new Paragraph("Subtotal")));
             totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", subtotal))));
             totalTable.addCell(new Cell().add(new Paragraph("Tax (13%)")));
