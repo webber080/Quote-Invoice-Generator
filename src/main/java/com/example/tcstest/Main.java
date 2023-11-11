@@ -14,7 +14,7 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/hello-view.fxml")); // Adjust the path to your FXML file if needed
         Scene scene = new Scene(root);
 
-        primaryStage.setTitle("The Courier Shoppe | Quote Generator");
+        primaryStage.setTitle("Quote/Invoice Generator");
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);  // This line makes the stage non-resizable
         primaryStage.show();
