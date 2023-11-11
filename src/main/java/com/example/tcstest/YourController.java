@@ -154,9 +154,7 @@ public class YourController {
             Table headerTable = new Table(UnitValue.createPercentArray(columnWidths));
             headerTable.setWidth(UnitValue.createPercentValue(100)); // Table uses the full width of the page
             Color yellowColor = new DeviceRgb(255, 199, 51); // RGB equivalent of FFC733
-
-// Set the background color for the header table using the new Color object
-            headerTable.setBackgroundColor(yellowColor);
+            headerTable.setBackgroundColor(yellowColor); // Set the background color for the header table
 
             // Load the company logo
             ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
@@ -167,9 +165,7 @@ public class YourController {
             logoCell.setPaddingLeft(20); // Set your left padding
             logoCell.setPaddingTop(20); // Set your top padding
             logoCell.setPaddingBottom(20); // Set your bottom padding
-
-            // Add the logo cell to the header table
-            headerTable.addCell(logoCell);
+            headerTable.addCell(logoCell); // Add the logo cell to the header table
 
             // Company Info cell with padding and no border
             Paragraph companyInfo = new Paragraph("REDACTED")
@@ -178,15 +174,17 @@ public class YourController {
             companyInfoCell.setPaddingRight(20); // Set your right padding
             companyInfoCell.setPaddingTop(20); // Set your top padding
             companyInfoCell.setPaddingBottom(20); // Set your bottom padding
+            headerTable.addCell(companyInfoCell); // Add the company info cell to the header table
 
-            // Add the company info cell to the header table
-            headerTable.addCell(companyInfoCell);
+            document.add(headerTable); // Add the header table to the document
 
-            // Add the header table to the document
-            document.add(headerTable);
-
-// Now set the margins for the new area where the rest of the content will be placed
+            // Set the margins for the new area where the rest of the content will be placed
             document.setMargins(50, 50, 50, 50);
+
+            // Calculate the available width for the content within the margins
+            float pageWidth = pdfDocument.getDefaultPageSize().getWidth();
+            float widthMinusMargins = pageWidth - (document.getLeftMargin() + document.getRightMargin());
+
             // Add customer info below company info
             Paragraph customerInfo = new Paragraph()
                     .add("Bill To:\n")
@@ -200,13 +198,10 @@ public class YourController {
                     .setMarginTop(10); // Space above customer info
             document.add(customerInfo);
 
-            // Add a line break
-            document.add(new Paragraph("\n"));
-
             // Generate table with item details
             float[] newColumnWidths = {5, 1, 1, 1}; // Adjust column widths as necessary
-            Table itemDetailsTable = new Table(newColumnWidths);
-            itemDetailsTable.setWidth(UnitValue.createPercentValue(100));
+            Table itemDetailsTable = new Table(UnitValue.createPercentArray(newColumnWidths));
+            itemDetailsTable.setWidth(UnitValue.createPercentValue(widthMinusMargins));
 
             // Add headers
             Stream.of("Item", "Quantity", "Price", "Total Price").forEach(headerTitle -> {
@@ -224,7 +219,7 @@ public class YourController {
                 itemDetailsTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", item.getLineTotal()))));
             }
 
-            document.add(itemDetailsTable);
+            document.add(itemDetailsTable); // Add the item details table
 
             // Calculate the subtotal, tax, and total
             double subtotal = itemTable.getItems().stream().mapToDouble(Item::getLineTotal).sum();
@@ -233,8 +228,7 @@ public class YourController {
 
             // Add subtotal, tax, and total rows to the document
             Table totalTable = new Table(UnitValue.createPercentArray(new float[]{2, 1}));
-            totalTable.setWidth(UnitValue.createPercentValue(100)).setMarginTop(10);
-
+            totalTable.setWidth(UnitValue.createPercentValue(widthMinusMargins)).setMarginTop(10);
             totalTable.addCell(new Cell().add(new Paragraph("Subtotal")));
             totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", subtotal))));
             totalTable.addCell(new Cell().add(new Paragraph("Tax (13%)")));
@@ -242,13 +236,13 @@ public class YourController {
             totalTable.addCell(new Cell().add(new Paragraph("Total")));
             totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", total))));
 
-            document.add(totalTable);
+            document.add(totalTable); // Add the total table
 
             // Optionally, add footer content
             Paragraph footer = new Paragraph("Thank you for your business!")
                     .setTextAlignment(TextAlignment.CENTER)
                     .setMarginTop(20);
-            document.add(footer);
+            document.add(footer); // Add the footer paragraph
 
             // Close the document
             document.close();
@@ -257,6 +251,7 @@ public class YourController {
             e.printStackTrace();
         }
     }
+
 
 
 
