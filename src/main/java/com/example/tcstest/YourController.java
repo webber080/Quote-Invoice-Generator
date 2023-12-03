@@ -138,29 +138,28 @@ public class YourController {
             File selectedFile = fileChooser.showSaveDialog(itemTable.getScene().getWindow());
 
             if (selectedFile == null) {
-                return; // User canceled the file chooser
+                return; //user canceled the file chooser
             }
 
             PdfWriter writer = new PdfWriter(selectedFile.getAbsolutePath());
             PdfDocument pdfDocument = new PdfDocument(writer);
             Document document = new Document(pdfDocument);
 
-            // Set the document to landscape orientation and margins to 0
             pdfDocument.setDefaultPageSize(new PageSize(PageSize.A4));
             document.setMargins(0, 0, 0, 0);
 
-            // Initialize the header table with 1:2 ratio for logo to company details
+            //initialize the header table with 1:2 ratio for logo to company details
             float[] columnWidths = {1, 2};
             Table headerTable = new Table(UnitValue.createPercentArray(columnWidths));
             headerTable.setWidth(UnitValue.createPercentValue(100)); // Table uses the full width of the page
             Color yellowColor = new DeviceRgb(255, 199, 51); // RGB equivalent of FFC733
             headerTable.setBackgroundColor(yellowColor); // Set the background color for the header table
 
-            // Load the company logo
+            //load the company logo
             ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
             Image pdfImg = new Image(imageData);
 
-            // Create a cell for the logo with padding and no border
+            //create a cell for the logo with padding and no border
             Cell logoCell = new Cell().add(pdfImg.setAutoScale(true)).setBorder(Border.NO_BORDER);
             logoCell.setPaddingLeft(20); // Set your left padding
             logoCell.setPaddingTop(20); // Set your top padding
@@ -283,25 +282,35 @@ public class YourController {
             // Set the margins for the document
             document.setMargins(50, 50, 50, 50);
 
+            // Create a full-width table for the yellow background
+            Table backgroundTable = new Table(1);
+            backgroundTable.setWidth(UnitValue.createPercentValue(100));
+            Cell backgroundCell = new Cell().setBackgroundColor(new DeviceRgb(255, 199, 51)).setHeight(100); // Set a fixed height for your header
+            backgroundTable.addCell(backgroundCell);
+            document.add(backgroundTable);
+
+            // Now add the header content within the margins
             // Load the company logo
             ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
             Image pdfImg = new Image(imageData).setAutoScale(true);
 
-            // Create a table for the header with no border and padding
-            Table headerTable = new Table(new float[]{1, 2});
-            headerTable.setWidth(UnitValue.createPercentValue(100)); // Use 100% of page width
-            headerTable.setBackgroundColor(new DeviceRgb(255, 199, 51)); // Set the background color for the header
+            // Create a table for the header content with specified margins
+            float[] columnWidths = {1, 2};
+            Table headerContentTable = new Table(columnWidths).useAllAvailableWidth();
 
-            // Add the logo to the header table
-            headerTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPadding(20));
+            // Add the logo to the header content table
+            headerContentTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPaddingLeft(50).setPaddingTop(20).setPaddingBottom(20).setPaddingRight(20));
 
-            // Add the company info to the header table
+            // Add the company info to the header content table
             Paragraph companyInfo = new Paragraph("The Courier Shoppe\n1275 Walker Road\nWindsor, ON\n N8Y 4X9\n(226) 975-0100\nadmin@thecouriershoppe.com")
                     .setMultipliedLeading(1.0f);
-            headerTable.addCell(new Cell().add(companyInfo).setBorder(Border.NO_BORDER).setPadding(20));
+            headerContentTable.addCell(new Cell().add(companyInfo).setBorder(Border.NO_BORDER).setPaddingRight(50).setPaddingTop(20).setPaddingBottom(20).setPaddingLeft(20));
 
-            // Add the header table to the document
-            document.add(headerTable);
+            // Set the relative positioning to the background table
+            headerContentTable.setRelativePosition(0, -100, 0, 0); // Adjust this based on the exact height of your background
+
+            // Add the header content table to the document
+            document.add(headerContentTable);
 
             // Add the Bill To: section
             Paragraph billTo = new Paragraph("Bill To:\n")
