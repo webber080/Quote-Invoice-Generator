@@ -291,15 +291,15 @@ public class YourController {
 
             // Now add the header content within the margins
             // Load the company logo
-            ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
-            Image pdfImg = new Image(imageData).setAutoScale(true);
+//            ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
+//            Image pdfImg = new Image(imageData).setAutoScale(true);
 
             // Create a table for the header content with specified margins
             float[] columnWidths = {1, 2};
             Table headerContentTable = new Table(columnWidths).useAllAvailableWidth();
 
             // Add the logo to the header content table
-            headerContentTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPaddingLeft(50).setPaddingTop(20).setPaddingBottom(20).setPaddingRight(20));
+//            headerContentTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPaddingLeft(50).setPaddingTop(20).setPaddingBottom(20).setPaddingRight(20));
 
             // Add the company info to the header content table
             Paragraph companyInfo = new Paragraph("The Courier Shoppe\n1275 Walker Road\nWindsor, ON\n N8Y 4X9\n(226) 975-0100\nadmin@thecouriershoppe.com")
@@ -372,12 +372,6 @@ public class YourController {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
 
 
     private boolean isNumeric(String str) {
