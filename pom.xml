@@ -107,9 +107,6 @@
             <artifactId>javafx-web</artifactId>
             <version>23-ea+3</version>
         </dependency>
-
-
-
     </dependencies>
 
 
