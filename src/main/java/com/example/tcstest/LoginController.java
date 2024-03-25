@@ -7,14 +7,39 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
 import java.io.IOException;
 
 public class LoginController {
-    public void googleLogin(ActionEvent event) throws IOException {
+
+    @FXML
+    public void handleFormLogin(ActionEvent event) throws IOException {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/hello-view.fxml"));
-        Scene scene = new Scene(root);
+
         Stage stage = (Stage)((Node)event.getSource()).getScene().getWindow();
-        stage.setScene(scene);
+        stage.setTitle("Quote/Invoice Generator");
+        stage.setScene(new Scene(root));
+        stage.setResizable(false);
         stage.show();
+    }
+    @FXML
+    public void handleGoogleLogin(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/googleLogin.fxml"));
+            Parent root = loader.load();
+
+            Stage webViewStage = new Stage();
+            webViewStage.setTitle("Google Login");
+            webViewStage.setScene(new Scene(root));
+            webViewStage.setResizable(false);
+
+            Stage originalStage = (Stage)((Node)event.getSource()).getScene().getWindow();
+            WebViewController.webViewStage = webViewStage;
+            WebViewController.originalStage = originalStage;
+
+            webViewStage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,15 +1,18 @@
 package com.example.tcstest.oauth2controller;
 
-import org.springframework.http.ResponseEntity;
+import com.example.tcstest.WebViewController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
+
 @RestController
-@RequestMapping("/")
 public class OAuth2Controller {
-    @GetMapping
-    public ResponseEntity<String> response() {
-        return ResponseEntity.ok("This is a response!");
+
+    @GetMapping("/")
+    public Principal googleLogin(Principal p) {
+        WebViewController.handleCloseGoogle();
+        return p;
     }
 }
