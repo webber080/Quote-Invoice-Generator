@@ -9,6 +9,8 @@ import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.property.AreaBreakType;
 import com.itextpdf.layout.property.VerticalAlignment;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -21,6 +23,7 @@ import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.layout.property.UnitValue;
 import com.itextpdf.layout.property.TextAlignment;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.FileChooser;
 
 import java.io.*;
@@ -69,12 +72,30 @@ public class YourController {
     private TextField phoneField;
     @FXML
     private TextField emailField;
+
+    @FXML
+    private TextField userCompanyField;
+    @FXML
+    private TextField userStreetField;
+    @FXML
+    private TextField userCityField;
+    @FXML
+    private TextField userPostalField;
+    @FXML
+    private TextField userPhoneField;
+    @FXML
+    private TextField userEmailField;
     @FXML
     private ImageView tcsLogoImageView;
+    @FXML
+    private ColorPicker headerColorPicker;
+    private Color headerColor;
+
 
     @FXML
     public void initialize() {
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
+        headerColor = new DeviceRgb(255, 199, 51);
         quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         unitPriceColumn.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
         itemTable.setItems(FXCollections.observableArrayList());
@@ -93,6 +114,15 @@ public class YourController {
 
     }
 
+
+    public void handleHeaderColorPicker() {
+        getHeaderColor();
+    }
+    @FXML
+    public void getHeaderColor() {
+        headerColor = new DeviceRgb((float) headerColorPicker.getValue().getRed(), (float) headerColorPicker.getValue().getGreen(), (float) headerColorPicker.getValue().getBlue());;
+        System.out.println(headerColor);
+    }
     @FXML
     public void handleAddItemButton() {
         String name = nameField.getText();
@@ -152,8 +182,7 @@ public class YourController {
             float[] columnWidths = {1, 2};
             Table headerTable = new Table(UnitValue.createPercentArray(columnWidths));
             headerTable.setWidth(UnitValue.createPercentValue(100)); // Table uses the full width of the page
-            Color yellowColor = new DeviceRgb(255, 199, 51); // RGB equivalent of FFC733
-            headerTable.setBackgroundColor(yellowColor); // Set the background color for the header table
+            headerTable.setBackgroundColor(headerColor); // Set the background color for the header table
 
             //load the company logo
             ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
@@ -285,7 +314,7 @@ public class YourController {
             // Create a full-width table for the yellow background
             Table backgroundTable = new Table(1);
             backgroundTable.setWidth(UnitValue.createPercentValue(100));
-            Cell backgroundCell = new Cell().setBackgroundColor(new DeviceRgb(255, 199, 51)).setHeight(100); // Set a fixed height for your header
+            Cell backgroundCell = new Cell().setBackgroundColor(headerColor).setHeight(100); // Set a fixed height for your header
             backgroundTable.addCell(backgroundCell);
             document.add(backgroundTable);
 
@@ -302,7 +331,13 @@ public class YourController {
 //            headerContentTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPaddingLeft(50).setPaddingTop(20).setPaddingBottom(20).setPaddingRight(20));
 
             // Add the company info to the header content table
-            Paragraph companyInfo = new Paragraph("The Courier Shoppe\n1275 Walker Road\nWindsor, ON\n N8Y 4X9\n(226) 975-0100\nadmin@thecouriershoppe.com")
+            Paragraph companyInfo = new Paragraph()
+                    .add(userCompanyField.getText() + "\n")
+                    .add(userStreetField.getText() + "\n")
+                    .add(userCityField.getText() + "\n")
+                    .add(userPostalField.getText() + "\n")
+                    .add(userPhoneField.getText() + "\n")
+                    .add(userEmailField.getText() + "\n")
                     .setMultipliedLeading(1.0f);
             headerContentTable.addCell(new Cell().add(companyInfo).setBorder(Border.NO_BORDER).setPaddingRight(50).setPaddingTop(20).setPaddingBottom(20).setPaddingLeft(20));
 
@@ -382,4 +417,5 @@ public class YourController {
             return false;
         }
     }
+
 }
