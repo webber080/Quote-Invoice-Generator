@@ -52,12 +52,12 @@
       </HBox>
       <HBox alignment="CENTER" layoutX="251.0" layoutY="128.0" prefHeight="42.0" prefWidth="333.0">
          <children>
-            <Label prefHeight="30.0" prefWidth="110.0" text="Username:">
+            <Label alignment="CENTER" prefHeight="30.0" prefWidth="110.0" text="Email:">
                <font>
                   <Font name="System Bold" size="20.0" />
                </font>
             </Label>
-            <TextField prefHeight="25.0" prefWidth="211.0" />
+            <TextField fx:id="emailTextField" prefHeight="25.0" prefWidth="211.0" />
          </children>
       </HBox>
       <HBox alignment="CENTER" layoutX="251.0" layoutY="179.0" prefHeight="42.0" prefWidth="333.0">
@@ -67,7 +67,7 @@
                   <Font name="System Bold" size="20.0" />
                </font>
             </Label>
-            <PasswordField prefHeight="25.0" prefWidth="211.0" />
+            <PasswordField fx:id="passwordTextField" prefHeight="25.0" prefWidth="211.0" />
          </children>
       </HBox>
    </children>

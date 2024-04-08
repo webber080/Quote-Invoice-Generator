@@ -20,22 +20,18 @@ public class Item {
     public SimpleStringProperty nameProperty() {
         return name;
     }
-
     public SimpleIntegerProperty quantityProperty() {
         return quantity;
     }
-
-
-
     public SimpleDoubleProperty unitPriceProperty() {
         return unitPrice;
     }
+
 
     // Regular getters and setters
     public String getName() {
         return name.get();
     }
-
     public void setName(String name) {
         this.name.set(name);
     }
@@ -43,10 +39,17 @@ public class Item {
     public int getQuantity() {
         return quantity.get();
     }
-
     public void setQuantity(int quantity) {
         this.quantity.set(quantity);
     }
+
+    public double getUnitPrice() {
+        return unitPrice.get();
+    }
+    public void setUnitPrice(double unitPrice) {
+        this.unitPrice.set(unitPrice);
+    }
+
 
     public boolean isSpecialEntry() {
         // Implement your logic to identify a special entry.
@@ -64,14 +67,6 @@ public class Item {
     public static Item totalEntry(double totalAmount) {
         // Create a special entry for total
         return new Item("Total", 0, totalAmount);
-    }
-
-    public double getUnitPrice() {
-        return unitPrice.get();
-    }
-
-    public void setUnitPrice(double unitPrice) {
-        this.unitPrice.set(unitPrice);
     }
 
     // Method to calculate line total for an individual item

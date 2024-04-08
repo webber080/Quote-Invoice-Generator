@@ -1,5 +1,11 @@
 package com.example.tcstest;
 
+import com.example.tcstest.db_stuff.entity.InvoicesInfo;
+import com.example.tcstest.db_stuff.entity.Users;
+import com.example.tcstest.db_stuff.service.UsersService;
+import com.example.tcstest.errors.ErrorModal;
+import com.example.tcstest.helpers.invoiceAddedModal;
+import com.example.tcstest.helpers.switchScene;
 import com.itextpdf.io.image.ImageData;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceRgb;
@@ -12,6 +18,10 @@ import com.itextpdf.layout.property.VerticalAlignment;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import com.example.tcstest.model.Item;
@@ -31,17 +41,28 @@ import java.io.*;
 import com.itextpdf.io.image.ImageDataFactory;
 
 import java.net.URL;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.font.PdfFont;
+import javafx.stage.Stage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.client.RestTemplate;
 
 public class YourController {
-
-    public Label newItemLabel;
+    // This TableView will contain rows of type "Item" (custom class), and each row in the table represents an instance of the Item class.
     @FXML
     private TableView<Item> itemTable;
+
+    // These TableColumn instances are parameterized with two types: Item and String/Integer/Double.
+    // The first type parameter (Item) specifies the type of the items displayed in the TableView (i.e., the type of the rows).
+    // The second type parameter (String/Integer/Double) specifies the type of data displayed in the column.
+    // In the first case, the "nameColumn" displays String data, which corresponds to the name property of the Item class.
     @FXML
     private TableColumn<Item, String> nameColumn;
     @FXML
@@ -50,16 +71,20 @@ public class YourController {
     private TableColumn<Item, Double> unitPriceColumn;
     @FXML
     private TableColumn<Item, Double> totalPriceColumn;
+
     @FXML
     private TextField nameField;
     @FXML
     private TextField quantityField;
     @FXML
     private TextField unitPriceField;
+
     @FXML
     private Button addButton;
     @FXML
     private Button exportButton;
+
+    // CUSTOMER/USER
     @FXML
     private TextField companyField;
     @FXML
@@ -73,18 +98,19 @@ public class YourController {
     @FXML
     private TextField emailField;
 
+    // COMPANY
     @FXML
-    private TextField userCompanyField;
+    private TextField cCompanyField;
     @FXML
-    private TextField userStreetField;
+    private TextField cStreetField;
     @FXML
-    private TextField userCityField;
+    private TextField cCityField;
     @FXML
-    private TextField userPostalField;
+    private TextField cPostalField;
     @FXML
-    private TextField userPhoneField;
+    private TextField cPhoneField;
     @FXML
-    private TextField userEmailField;
+    private TextField cEmailField;
     @FXML
     private ImageView tcsLogoImageView;
     @FXML
@@ -94,12 +120,29 @@ public class YourController {
 
     @FXML
     public void initialize() {
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         headerColor = new DeviceRgb(255, 199, 51);
+
+        // When calling "new PropertyValueFactory<>("propertyName")", you're creating a PropertyValueFactory instance that will retrieve the value of the property with the specified name from each "Item" item in the TableView and display it in the corresponding TableColumn.
+        // For example, the first line sets up the nameColumn to display the value of the "name" property from each Item object in the TableView.
+        // When the TableView is populated with Item objects, the nameColumn will automatically display the "name" property value of each Item in its cells.
+        // NOTE: The property names specified must correspond to the actual property names in the "Item" class
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         unitPriceColumn.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
-        itemTable.setItems(FXCollections.observableArrayList());
+
+        // This callback (inside parentheses) is invoked by JavaFX whenever it needs to determine the value to display in a cell of the totalPriceColumn TableColumn
         totalPriceColumn.setCellValueFactory(cellData -> cellData.getValue().unitPriceProperty().multiply(cellData.getValue().quantityProperty()).asObject());
+
+        // FXCollections.observableArrayList() creates an empty observable list.
+        // This empty list is then set as the items of the itemTable, effectively clearing any existing items that might have been present in the table.
+        itemTable.setItems(FXCollections.observableArrayList());
+
+        // "TableRow" is a normal class
+        // When rows are added, updated, or removed in the TableView, the updateItem method is called for each row affected by the change.
+        // While "new TableRow<Item>() { ... }" involves creating a new instance of TableRow<Item>, it's not creating new rows in the TableView. Instead, it's defining the behavior and appearance of each existing row.
+        // The TableRow class in JavaFX represents a single row within a TableView. When you call setRowFactory, you're essentially providing a factory method to customize the behavior of these rows.
+        // This method (setRowFactory) is called by JavaFX to create a new TableRow instance for each row in the TableView, but it doesn't create new rows in the sense of adding more rows to the table.
+        // The setup of "setRowFactory()" occurs only once, but inside the callback, its updateItem method may be invoked multiple times during the lifecycle of the TableView, depending on the events occurring within the table.
         itemTable.setRowFactory(tv -> new TableRow<Item>() {
             @Override
             protected void updateItem(Item item, boolean empty) {
@@ -111,7 +154,11 @@ public class YourController {
                 }
             }
         });
+    }
 
+    @FXML
+    public void handleBackToDashboard(ActionEvent event) throws IOException {
+        switchScene.switchSceneHelper(event, YourController.class, "/fxml/dashboard.fxml", "Dashboard");
     }
 
 
@@ -125,6 +172,10 @@ public class YourController {
     }
     @FXML
     public void handleAddItemButton() {
+        // Remove the 2 special rows first ("tax" and "total")
+        itemTable.getItems().removeIf(Item::isSpecialEntry);
+
+        // Validate item data before putting the new item to the table
         String name = nameField.getText();
         if (name.isEmpty() || !isNumeric(quantityField.getText()) || !isNumeric(unitPriceField.getText())) {
             return;
@@ -132,165 +183,28 @@ public class YourController {
         int quantity = Integer.parseInt(quantityField.getText());
         double unitPrice = Double.parseDouble(unitPriceField.getText());
 
+        // Add new item to table
         Item newItem = new Item(name, quantity, unitPrice);
         itemTable.getItems().add(newItem);
         itemTable.refresh();
 
+        // Clear text fields (at the bottom)
         nameField.clear();
         quantityField.clear();
         unitPriceField.clear();
-        itemTable.getItems().removeIf(Item::isSpecialEntry);
 
+        // Calculate the updated tax and total ; preparing to add the special rows to the table
         double subtotal = itemTable.getItems().stream().mapToDouble(item -> item.getUnitPrice() * item.getQuantity()).sum();
         double tax = subtotal * 0.13;
         double totalWithTax = subtotal + tax;
 
+        // Add special rows to the table
         itemTable.getItems().addAll(
                 Item.taxEntry(tax),
                 Item.totalEntry(totalWithTax)
         );
 
         itemTable.refresh();
-        updateTotalPrice();
-    }
-
-    private void updateTotalPrice() {
-        double subtotal = itemTable.getItems().stream().mapToDouble(item -> item.getUnitPrice() * item.getQuantity()).sum();
-        double tax = subtotal * 0.13;
-        double totalWithTax = subtotal + tax;
-    }
-
-    public void exportToPDFOld() {
-        try {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Save PDF");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
-            File selectedFile = fileChooser.showSaveDialog(itemTable.getScene().getWindow());
-
-            if (selectedFile == null) {
-                return; //user canceled the file chooser
-            }
-
-            PdfWriter writer = new PdfWriter(selectedFile.getAbsolutePath());
-            PdfDocument pdfDocument = new PdfDocument(writer);
-            Document document = new Document(pdfDocument);
-
-            pdfDocument.setDefaultPageSize(new PageSize(PageSize.A4));
-            document.setMargins(0, 0, 0, 0);
-
-            //initialize the header table with 1:2 ratio for logo to company details
-            float[] columnWidths = {1, 2};
-            Table headerTable = new Table(UnitValue.createPercentArray(columnWidths));
-            headerTable.setWidth(UnitValue.createPercentValue(100)); // Table uses the full width of the page
-            headerTable.setBackgroundColor(headerColor); // Set the background color for the header table
-
-            //load the company logo
-            ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
-            Image pdfImg = new Image(imageData);
-
-            //create a cell for the logo with padding and no border
-            Cell logoCell = new Cell().add(pdfImg.setAutoScale(true)).setBorder(Border.NO_BORDER);
-            logoCell.setPaddingLeft(20); // Set your left padding
-            logoCell.setPaddingTop(20); // Set your top padding
-            logoCell.setPaddingBottom(20); // Set your bottom padding
-            headerTable.addCell(logoCell); // Add the logo cell to the header table
-
-
-            // Company Info cell with padding and no border
-            Paragraph companyInfo = new Paragraph("The Courier Shoppe\n1275 Walker Road\nWindsor, ON\n N8Y 4X9\n(226) 975-0100\nadmin@thecouriershoppe.com")
-                    .setMultipliedLeading(1.0f);
-            Cell companyInfoCell = new Cell().add(companyInfo).setBorder(Border.NO_BORDER);
-            companyInfoCell.setPaddingRight(20); // Set your right padding
-            companyInfoCell.setPaddingTop(20); // Set your top padding
-            companyInfoCell.setPaddingBottom(20); // Set your bottom padding
-            headerTable.addCell(companyInfoCell); // Add the company info cell to the header table
-
-            document.add(headerTable); // Add the header table to the document
-
-            // Set the margins for the rest of the content
-            document.setMargins(50, 50, 50, 50);
-
-            // Calculate the width for the tables within the margins
-            float widthMinusMargins = pdfDocument.getDefaultPageSize().getWidth() - (document.getLeftMargin() + document.getRightMargin());
-
-            float pageSizeWidth = pdfDocument.getDefaultPageSize().getWidth();
-            float leftMargin = document.getLeftMargin();
-            float rightMargin = document.getRightMargin();
-
-            System.out.println("Page size width: " + pageSizeWidth); // Debug output
-            System.out.println("Left margin: " + leftMargin); // Debug output
-            System.out.println("Right margin: " + rightMargin); // Debug output
-            System.out.println("Width minus margins: " + widthMinusMargins); // Debug output
-
-
-            // Add customer info below company info
-            Paragraph customerInfo = new Paragraph()
-                    .add("Bill To:\n")
-                    .add(companyField.getText() + "\n")
-                    .add(streetField.getText() + "\n")
-                    .add(cityField.getText() + "\n")
-                    .add(postalField.getText() + "\n")
-                    .add(phoneField.getText() + "\n")
-                    .add(emailField.getText() + "\n")
-                    .setBold()
-                    .setMarginTop(10); // Space above customer info
-            document.add(customerInfo);
-
-
-
-            // Generate table with item details
-            float[] newColumnWidths = {5, 1, 1, 1}; // Adjust column widths as necessary
-            Table itemDetailsTable = new Table(UnitValue.createPercentArray(newColumnWidths));
-
-            itemDetailsTable.setWidth(widthMinusMargins);
-
-            // Add headers
-            Stream.of("Item", "Quantity", "Price", "Total Price").forEach(headerTitle -> {
-                Cell header = new Cell();
-                header.setBackgroundColor(ColorConstants.LIGHT_GRAY);
-                header.add(new Paragraph(headerTitle));
-                itemDetailsTable.addHeaderCell(header);
-            });
-
-            // Add item rows
-            for (Item item : itemTable.getItems()) {
-                itemDetailsTable.addCell(new Cell().add(new Paragraph(item.getName())));
-                itemDetailsTable.addCell(new Cell().add(new Paragraph(String.valueOf(item.getQuantity()))));
-                itemDetailsTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", item.getUnitPrice()))));
-                itemDetailsTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", item.getLineTotal()))));
-            }
-
-            document.add(itemDetailsTable); // Add the item details table
-
-            // Calculate the subtotal, tax, and total
-            double subtotal = itemTable.getItems().stream().mapToDouble(Item::getLineTotal).sum();
-            double tax = subtotal * 0.13;
-            double total = subtotal + tax;
-
-            // Add subtotal, tax, and total rows to the document
-            Table totalTable = new Table(UnitValue.createPercentArray(new float[]{2, 1}));
-            totalTable.setWidth(widthMinusMargins);
-            totalTable.addCell(new Cell().add(new Paragraph("Subtotal")));
-            totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", subtotal))));
-            totalTable.addCell(new Cell().add(new Paragraph("Tax (13%)")));
-            totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", tax))));
-            totalTable.addCell(new Cell().add(new Paragraph("Total")));
-            totalTable.addCell(new Cell().add(new Paragraph(String.format("$%.2f", total))));
-
-            document.add(totalTable); // Add the total table
-
-            // Optionally, add footer content
-            Paragraph footer = new Paragraph("Thank you for your business!")
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginTop(20);
-            document.add(footer); // Add the footer paragraph
-
-            // Close the document
-            document.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void exportToPDF() {
@@ -303,6 +217,8 @@ public class YourController {
             if (selectedFile == null) {
                 return; // User canceled the file chooser
             }
+
+            saveInvoiceInfo();
 
             PdfWriter writer = new PdfWriter(selectedFile.getAbsolutePath());
             PdfDocument pdfDocument = new PdfDocument(writer);
@@ -320,24 +236,24 @@ public class YourController {
 
             // Now add the header content within the margins
             // Load the company logo
-//            ImageData imageData = ImageDataFactory.create(getClass().getResource("/TCSlogo.png").toExternalForm());
-//            Image pdfImg = new Image(imageData).setAutoScale(true);
+            ImageData imageData = ImageDataFactory.create(getClass().getResource("/images/logo.png").toExternalForm());
+            Image pdfImg = new Image(imageData).setAutoScale(true);
 
             // Create a table for the header content with specified margins
             float[] columnWidths = {1, 2};
             Table headerContentTable = new Table(columnWidths).useAllAvailableWidth();
 
             // Add the logo to the header content table
-//            headerContentTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPaddingLeft(50).setPaddingTop(20).setPaddingBottom(20).setPaddingRight(20));
+            headerContentTable.addCell(new Cell().add(pdfImg).setBorder(Border.NO_BORDER).setPaddingLeft(50).setPaddingTop(20).setPaddingBottom(20).setPaddingRight(20));
 
             // Add the company info to the header content table
             Paragraph companyInfo = new Paragraph()
-                    .add(userCompanyField.getText() + "\n")
-                    .add(userStreetField.getText() + "\n")
-                    .add(userCityField.getText() + "\n")
-                    .add(userPostalField.getText() + "\n")
-                    .add(userPhoneField.getText() + "\n")
-                    .add(userEmailField.getText() + "\n")
+                    .add(cCompanyField.getText() + "\n")
+                    .add(cStreetField.getText() + "\n")
+                    .add(cCityField.getText() + "\n")
+                    .add(cPostalField.getText() + "\n")
+                    .add(cPhoneField.getText() + "\n")
+                    .add(cEmailField.getText() + "\n")
                     .setMultipliedLeading(1.0f);
             headerContentTable.addCell(new Cell().add(companyInfo).setBorder(Border.NO_BORDER).setPaddingRight(50).setPaddingTop(20).setPaddingBottom(20).setPaddingLeft(20));
 
@@ -416,6 +332,57 @@ public class YourController {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private void saveInvoiceInfo(){
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:8080/users/" + Main.currentID;
+        ResponseEntity<Users> response = restTemplate.getForEntity(url, Users.class, Main.currentID);
+
+        if (response.getStatusCode() == HttpStatus.OK) {
+            Users user = response.getBody();
+            InvoicesInfo invoicesInfo = new InvoicesInfo();
+
+            invoicesInfo.setUsersInfo(user);
+
+            // Set COMPANY values using setters
+            invoicesInfo.setCName(cCompanyField.getText());
+            invoicesInfo.setCStreetAddress(cStreetField.getText());
+            invoicesInfo.setCCityProvince(cCityField.getText());
+            invoicesInfo.setCPostalCode(cPostalField.getText());
+            invoicesInfo.setCPhone(cPhoneField.getText());
+            invoicesInfo.setCEmail(cEmailField.getText());
+
+            // Set CUSTOMER/USER values using setters
+            invoicesInfo.setUName(companyField.getText());
+            invoicesInfo.setUStreetAddress(streetField.getText());
+            invoicesInfo.setUCityProvince(cityField.getText());
+            invoicesInfo.setUPostalCode(postalField.getText());
+            invoicesInfo.setUPhone(phoneField.getText());
+            invoicesInfo.setUEmail(emailField.getText());
+
+            // Prepare HTTP headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            // Prepare HTTP request entity
+            HttpEntity<InvoicesInfo> requestEntity = new HttpEntity<>(invoicesInfo, headers);
+
+            // Send POST request
+            RestTemplate rTemplate = new RestTemplate();
+            String postURL = "http://localhost:8080/invoices";
+            InvoicesInfo createdInvoice = rTemplate.postForObject(postURL, requestEntity, InvoicesInfo.class);
+
+            if (createdInvoice != null) {
+                // Handle success (e.g., update UI, display success message)
+                invoiceAddedModal.showSuccessModal("Successfully created invoice!");
+                System.out.println("Invoice created successfully with ID: " + createdInvoice.getInvoiceID());
+            } else {
+                // Handle failure (e.g., display error message)
+                ErrorModal.showErrorModal("Couldn't create modal");
+            }
+        }
+
     }
 
 }
