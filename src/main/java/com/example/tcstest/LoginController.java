@@ -42,4 +42,20 @@ public class LoginController {
             e.printStackTrace();
         }
     }
+
+    @FXML
+    public void handleFormRegister(ActionEvent event) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/register.fxml"));
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setTitle("Register");
+            stage.setScene(new Scene(root));
+            stage.setResizable(false);
+
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

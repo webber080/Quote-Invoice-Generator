@@ -31,7 +31,15 @@
             <Image url="@../images/lock.png" />
          </image>
       </ImageView>
-      <Button layoutX="362.0" layoutY="241.0" mnemonicParsing="false" onAction="#handleFormLogin" prefHeight="35.0" prefWidth="83.0" style="-fx-background-color: #ebd10e;" text="Login">
+      <Button layoutX="367.0" layoutY="241.0" mnemonicParsing="false" onAction="#handleFormLogin" prefHeight="35.0" prefWidth="83.0" style="-fx-background-color: #ebd10e;" text="Login">
+         <cursor>
+            <Cursor fx:constant="HAND" />
+         </cursor>
+         <font>
+            <Font name="System Bold" size="16.0" />
+         </font>
+      </Button>
+      <Button layoutX="462.0" layoutY="241.0" mnemonicParsing="false" onAction="#handleFormRegister" prefHeight="35.0" prefWidth="83.0" style="-fx-background-color: #ccc697;" text="Register">
          <cursor>
             <Cursor fx:constant="HAND" />
          </cursor>
@@ -52,7 +60,7 @@
       </HBox>
       <HBox alignment="CENTER" layoutX="251.0" layoutY="128.0" prefHeight="42.0" prefWidth="333.0">
          <children>
-            <Label prefHeight="30.0" prefWidth="110.0" text="Username:">
+            <Label prefHeight="30.0" prefWidth="110.0" text="Email:">
                <font>
                   <Font name="System Bold" size="20.0" />
                </font>
